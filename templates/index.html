@@ -14,6 +14,16 @@
   {% if extracted_text %}
     <h3>Extracted Text:</h3>
     <pre>{{ extracted_text }}</pre>
+
+    <h3>Resume Sections:</h3>
+    {% for section, content in resume_sections.items() %}
+      <h4>{{ section }}</h4>
+      <ul>
+        {% for item in content %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
   {% endif %}
 </body>
 </html>
