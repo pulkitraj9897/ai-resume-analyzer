@@ -45,12 +45,48 @@ def extract_sections(text):
 
     return sections
 
+def get_keywords(text):
+    doc = nlp(text.lower())
+    return set([token.lemma_ for token in doc if token.is_alpha and not token.is_stop])
+
+def generate_feedback(resume_text, job_desc):
+    resume_keywords = get_keywords(resume_text)
+    jd_keywords = get_keywords(job_desc)
+
+    matched = resume_keywords & jd_keywords
+    missing = jd_keywords - resume_keywords
+
+    feedback = {
+        "matched_keywords": list(matched),
+        "missing_keywords": list(missing),
+        "score": int((len(matched) / len(jd_keywords)) * 100) if jd_keywords else 0,
+        "message": "",
+        "class": "bad"
+    }
+
+    if feedback["score"] > 75:
+        feedback["message"] = "Great match! Your resume aligns well with the job description."
+        feedback["class"] = "good"
+    elif feedback["score"] > 50:
+        feedback["message"] = "Good, but you can include more specific skills or tools mentioned in the job."
+        feedback["class"] = "okay"
+    else:
+        feedback["message"] = "Consider tailoring your resume to better match the job description keywords."
+        feedback["class"] = "bad"
+
+    return feedback
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     extracted_text = ""
     resume_sections = {}
+    feedback = {}
+    job_desc = ""
+
     if request.method == "POST":
         file = request.files["resume"]
+        job_desc = request.form.get("job_desc", "")
+
         if file:
             filename = file.filename
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -65,7 +101,10 @@ def index():
 
             resume_sections = extract_sections(extracted_text)
 
-    return render_template("index.html", extracted_text=extracted_text, resume_sections=resume_sections)
+            if job_desc:
+                feedback = generate_feedback(extracted_text, job_desc)
+
+    return render_template("index.html", extracted_text=extracted_text, resume_sections=resume_sections, feedback=feedback, job_desc=job_desc)
 
 if __name__ == "__main__":
     app.run(debug=True)

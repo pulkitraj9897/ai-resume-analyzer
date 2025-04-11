@@ -3,27 +3,47 @@
 <html>
 <head>
   <title>Resume Analyzer</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <h2>Upload Your Resume</h2>
+  <h2>AI Resume Analyzer</h2>
   <form method="POST" enctype="multipart/form-data">
-    <input type="file" name="resume" accept=".pdf,.docx" required>
+    <label>Upload Resume (PDF/DOCX)</label>
+    <input type="file" name="resume" required>
+
+    <label>Paste Job Description</label>
+    <textarea name="job_desc" rows="8" required>{{ job_desc }}</textarea>
+
     <button type="submit">Analyze</button>
   </form>
 
   {% if extracted_text %}
-    <h3>Extracted Text:</h3>
-    <pre>{{ extracted_text }}</pre>
+    <div class="section-block">
+      <h3>Extracted Resume Text</h3>
+      <pre>{{ extracted_text }}</pre>
+    </div>
 
-    <h3>Resume Sections:</h3>
-    {% for section, content in resume_sections.items() %}
-      <h4>{{ section }}</h4>
-      <ul>
-        {% for item in content %}
-          <li>{{ item }}</li>
-        {% endfor %}
-      </ul>
-    {% endfor %}
+    <div class="section-block">
+      <h3>Resume Sections</h3>
+      {% for section, content in resume_sections.items() %}
+        <h4>{{ section }}</h4>
+        <ul>
+          {% for item in content %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      {% endfor %}
+    </div>
+
+    {% if feedback %}
+      <div class="section-block feedback {{ feedback.class }}">
+        <h3>Feedback</h3>
+        <p><strong>Match Score:</strong> {{ feedback.score }}%</p>
+        <p>{{ feedback.message }}</p>
+        <p><strong>Matched Keywords:</strong> {{ feedback.matched_keywords | join(", ") }}</p>
+        <p><strong>Missing Keywords:</strong> {{ feedback.missing_keywords | join(", ") }}</p>
+      </div>
+    {% endif %}
   {% endif %}
 </body>
 </html>
